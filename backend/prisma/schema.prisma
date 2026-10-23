@@ -1,0 +1,160 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =============================================================
+// ENUMS
+// =============================================================
+
+enum Genero {
+  M
+  F
+
+  @@map("genero_tipo")
+}
+
+enum StatusMembro {
+  nao_membro
+  membro
+
+  @@map("status_membro_tipo")
+}
+
+enum StatusPessoa {
+  novo_convertido
+  afastado
+  em_transicao
+  outra_igreja
+  lideranca_outra_igreja
+  uber
+
+  @@map("status_pessoa_tipo")
+}
+
+enum ComoConheceu {
+  amigo
+  familia
+  convite_pessoa
+  redes_sociais
+  youtube
+  oracao_12h
+  google_maps
+  passando_proximo
+  connect
+  acao_social
+  evento
+  outro
+
+  @@map("como_conheceu_tipo")
+}
+
+enum TipoUsuario {
+  usuario_externo
+  lider
+  minis_acolhimento
+  super_user
+
+  @@map("tipo_usuario_tipo")
+}
+
+enum Residencia {
+  casa
+  apartamento
+  condominio
+
+  @@map("residencia_tipo")
+}
+
+
+// =============================================================
+// MODELOS
+// =============================================================
+
+model Usuario {
+  id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome        String      @db.VarChar(100)
+  telefone    String      @unique @db.VarChar(20)
+  senhaHash   String      @map("senha_hash") @db.VarChar(255)
+  genero      Genero?
+  tipoUsuario TipoUsuario @default(usuario_externo) @map("tipo_usuario")
+  isAdmin     Boolean     @default(false) @map("is_admin")
+  isAtivo     Boolean     @default(true) @map("is_ativo")
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt   DateTime    @updatedAt @map("updated_at") @db.Timestamptz
+
+  visitantes Visitante[]
+
+  @@map("usuarios")
+}
+
+model Connect {
+  id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  nome           String        @db.VarChar(100)
+  lideres        String?       @db.VarChar(100)
+
+  // Endereço fixo do Connect
+  tipoResidencia Residencia    @default(casa) @map("tipo_residencia")
+  rua            String        @db.VarChar(100)
+  numero         String?       @db.VarChar(10)
+  bairro         String        @db.VarChar(100)
+  cidade         String        @default("Campinas") @db.VarChar(100)
+  complemento    String?       @db.Text
+  cep            String?       @db.VarChar(9)
+
+  isAtivo        Boolean       @default(true) @map("is_ativo")
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz
+
+  visitantes Visitante[]
+
+  @@index([bairro], map: "idx_connects_bairro")
+  @@map("connects")
+}
+
+model Visitante {
+  id                String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String            @map("user_id") @db.Uuid
+  connectId         String?           @map("connect_id") @db.Uuid
+
+  // Dados Pessoais e Lembrete Visual/Contextual
+  nome              String            @db.VarChar(100)
+  apelidoReferencia String?           @map("apelido_referencia") @db.VarChar(120) // Ex: "Pai do Leo", "Camisa preta"
+  telefone          String            @unique @db.VarChar(20)
+  dataNascimento    DateTime?         @map("data_nascimento") @db.Date
+  genero            Genero?
+
+  // Localização
+  cidadeMora        String            @default("Campinas") @map("cidade_mora") @db.VarChar(100)
+  bairro            String?           @db.VarChar(255)
+
+  // Status Institucional e Termômetro Pastoral
+  statusMembro      StatusMembro      @default(nao_membro) @map("status_membro")
+  statusPessoa      StatusPessoa?     @map("status_pessoa") // Opcional: preenche conforme conhece a pessoa
+  tempoMembro       DateTime?         @map("tempo_membresia") @db.Date
+
+  // Origem e Histórico de Acompanhamento
+  comoConheceu      ComoConheceu      @map("como_conheceu")
+  outroMeioConhecer String?           @map("outro_meio") @db.VarChar(150)
+  ultimoContato     DateTime?         @map("ultimo_contato") @db.Date
+  observacao        String?           @db.Text
+
+  createdAt         DateTime          @default(now()) @map("created_at") @db.Timestamptz
+  updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz
+
+  // Relações
+  responsavel Usuario  @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  connect     Connect? @relation(fields: [connectId], references: [id], onDelete: SetNull, onUpdate: NoAction)
+
+  // Índices para filtros rápidos na tela
+  @@index([userId], map: "idx_visitantes_user_id")
+  @@index([connectId], map: "idx_visitantes_connect_id")
+  @@index([ultimoContato], map: "idx_visitantes_ultimo_contato")
+  @@index([statusMembro], map: "idx_visitantes_status_membro")
+  @@index([statusPessoa], map: "idx_visitantes_status_pessoa")
+  @@index([bairro], map: "idx_visitantes_bairro")
+  @@map("visitantes")
+}

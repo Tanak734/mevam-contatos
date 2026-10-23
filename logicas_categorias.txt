@@ -1,0 +1,6 @@
+se o usuario for
+
+externo = nao tem acesso aos connects, apenas a adicao de contatos
+membro = acesso aos connects, adicao de contatos e alteraçoes do perfil
+lider = acesso a alteracao de todos menos de acesso ao banco de dados 
+super user = admin 
