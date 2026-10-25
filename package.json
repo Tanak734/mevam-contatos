@@ -2,7 +2,13 @@
   "name": "mevam-contatos",
   "version": "1.0.0",
   "private": true,
-  "scripts": {},
+  "scripts": {
+    "dev:backend": "pnpm --filter backend dev",
+    "db:push": "pnpm --filter backend run db:push",
+    "db:migrate": "pnpm --filter backend run db:migrate",
+    "db:generate": "pnpm --filter backend run db:generate",
+    "db:studio": "pnpm --filter backend run db:studio"
+  },
   "pnpm": {
     "onlyBuiltDependencies": [
       "@prisma/client",
@@ -10,5 +16,11 @@
       "workerd",
       "esbuild"
     ]
+  },
+  "devDependencies": {
+    "@fastify/type-provider-zod": "^1.0.1"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
   }
 }

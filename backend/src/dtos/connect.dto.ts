@@ -23,9 +23,8 @@ export const CreateConnectSchema = z.object({
   numero: z
     .string()
     .trim()
-    .max(10, { message: 'O número deve ter no máximo 10 caracteres' })
-    .optional()
-    .nullable(),
+    .min(1, { message: 'O número do endereço é obrigatório' })
+    .max(10, { message: 'O número deve ter no máximo 10 caracteres' }),
   bairro: z
     .string()
     .trim()
@@ -54,7 +53,6 @@ export const CreateConnectSchema = z.object({
     })
     .optional()
     .nullable(),
-  isAtivo: z.boolean().default(true),
 });
 
 export const UpdateConnectSchema = CreateConnectSchema.partial();
@@ -77,17 +75,34 @@ export const ConnectResponseSchema = z.object({
   lideres: z.string().nullable(),
   tipoResidencia: residenciaEnum,
   rua: z.string(),
-  numero: z.string().nullable(),
+  numero: z.string(),
   bairro: z.string(),
   cidade: z.string(),
   complemento: z.string().nullable(),
   cep: z.string().nullable(),
   isAtivo: z.boolean(),
+  deletedAt: z.date().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
+});
+
+export const ActionResponseSchema = z.object({
+  message: z.string(),
+});
+
+export const PaginatedConnectResponseSchema = z.object({
+  dados: z.array(ConnectResponseSchema),
+  meta: z.object({
+    total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    totalPaginas: z.number(),
+  }),
 });
 
 export type CreateConnectDTO = z.infer<typeof CreateConnectSchema>;
 export type UpdateConnectDTO = z.infer<typeof UpdateConnectSchema>;
 export type ListConnectsQueryDTO = z.infer<typeof ListConnectsQuerySchema>;
 export type ConnectResponseDTO = z.infer<typeof ConnectResponseSchema>;
+export type PaginatedConnectResponseDTO = z.infer<typeof PaginatedConnectResponseSchema>;
+export type ActionResponseDTO = z.infer<typeof ActionResponseSchema>;

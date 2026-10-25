@@ -1,6 +1,6 @@
 import {z} from 'zod'
 import { telefoneValidator } from '../plugins/phone.validator.js'
-import { tipoUsuarioEnum, UserResponseSchema } from './usuario.dto.js'
+import { tipoUsuarioEnum, UserResponseSchema } from './user.dto.js'
 
 export const LoginSquema = z.object({
   telefone: telefoneValidator,

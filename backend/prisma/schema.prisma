@@ -13,7 +13,6 @@ datasource db {
 enum Genero {
   M
   F
-
   @@map("genero_tipo")
 }
 
@@ -74,7 +73,7 @@ enum Residencia {
 // MODELOS
 // =============================================================
 
-model Usuario {
+model User {
   id          String      @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   nome        String      @db.VarChar(100)
   telefone    String      @unique @db.VarChar(20)
@@ -93,19 +92,20 @@ model Usuario {
 
 model Connect {
   id             String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  nome           String        @db.VarChar(100)
+  nome           String        @db.VarChar(100) @unique
   lideres        String?       @db.VarChar(100)
 
   // Endereço fixo do Connect
   tipoResidencia Residencia    @default(casa) @map("tipo_residencia")
   rua            String        @db.VarChar(100)
-  numero         String?       @db.VarChar(10)
+  numero         String        @db.VarChar(10)
   bairro         String        @db.VarChar(100)
   cidade         String        @default("Campinas") @db.VarChar(100)
   complemento    String?       @db.Text
   cep            String?       @db.VarChar(9)
 
   isAtivo        Boolean       @default(true) @map("is_ativo")
+  deletedAt      DateTime?     @map("deleted_at") @db.Timestamptz
   createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz
   updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz
 
@@ -146,7 +146,7 @@ model Visitante {
   updatedAt         DateTime          @updatedAt @map("updated_at") @db.Timestamptz
 
   // Relações
-  responsavel Usuario  @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction)
+  responsavel User  @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: NoAction)
   connect     Connect? @relation(fields: [connectId], references: [id], onDelete: SetNull, onUpdate: NoAction)
 
   // Índices para filtros rápidos na tela

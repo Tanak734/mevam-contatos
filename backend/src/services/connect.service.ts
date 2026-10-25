@@ -1,47 +1,57 @@
-import { PrismaClient } from "@prisma/client/extension";
-import {CreateConnectDTO, ListConnectsQueryDTO, UpdateConnectDTO} from "../dtos/connect.dto.js";
+import { PrismaClient, Prisma } from "@prisma/client";
 
+import {ConnectResponseDTO, CreateConnectDTO, ListConnectsQueryDTO, PaginatedConnectResponseDTO, UpdateConnectDTO} from "../dtos/connect.dto.js";
 export class ConnectService {
 
   constructor(private readonly db: PrismaClient) {}
   
-  async create(connectDto: CreateConnectDTO){
-    const existeUser = await this.db.connect.findFirst({
+  async create(connectDto: CreateConnectDTO):Promise<ConnectResponseDTO>{
+    const existeConnect = await this.db.connect.findFirst({
       where: {nome: connectDto.nome},
     });
 
-    if(existeUser){
+    if(existeConnect){
       throw new Error("O Connect ja existe");
     }
 
     return this.db.connect.create({data: connectDto});
   }
 
-  async update(uuid: string, connect: UpdateConnectDTO)  {
-    const existeUser = await this.db.connect.findUnique({
+  async update(uuid: string, connect: UpdateConnectDTO):Promise<ConnectResponseDTO> {
+    const existeConnect = await this.db.connect.findUnique({
       where: {id: uuid}
     });
 
-    if(!existeUser){
+    if(!existeConnect){
       throw new Error("O Connect não encontrado");
     }
 
     return this.db.connect.update({
-      where: uuid,
-      data: connect
+      where: { id: uuid },
+      data: connect,
     });
   }
 
-  async listar(filtros: ListConnectsQueryDTO){
-    const {page, nome, bairro, limit} = filtros;
-
+  async listar(filtros: ListConnectsQueryDTO):Promise<PaginatedConnectResponseDTO>{
+    const {page, limit, nome, bairro, cidade, isAtivo, } = filtros;
     const skip = (page - 1) * limit;
 
+    const where:Prisma.ConnectWhereInput = {};
 
-    const where:any = {}
-    if(nome){
-      const where = {contains: nome, mode:'insentive'}
+    where.isAtivo = isAtivo !== undefined ? isAtivo : true;
+
+    if (nome) {
+      where.nome = { contains: nome, mode: 'insensitive' };
     }
+
+    if (bairro) {
+      where.bairro = { contains: bairro, mode: 'insensitive' };
+    }
+
+    if (cidade) {
+      where.cidade = { contains: cidade, mode: 'insensitive' };
+    }
+
 
     const [dados, total] = await Promise.all([
         this.db.connect.findMany({
@@ -59,9 +69,56 @@ export class ConnectService {
         total,
         page,
         limit,
-        totalPaginas: Math.ceil(total / page),
+        totalPaginas: Math.ceil(total / limit),
       },
     };
   }
 
+  async desativar(uuid: string): Promise<void> {
+    const existeConnect = await this.db.connect.findFirst({
+      where: { id: uuid },
+    });
+
+    if (!existeConnect) {
+      throw new Error("Connect não encontrado");
+    }
+
+    await this.db.connect.update({
+      where: { id: uuid },
+      data: {
+        isAtivo: false,
+        deletedAt: new Date(),
+      },
+    });
+  }
+
+  async reativar(uuid: string): Promise<void> {
+    const existeConnect = await this.db.connect.findFirst({
+      where: { id: uuid },
+    });
+
+    if (!existeConnect) {
+      throw new Error("Connect não encontrado");
+    }
+
+    await this.db.connect.update({
+      where: { id: uuid },
+      data: {
+        isAtivo: true,
+        deletedAt: null,
+      },
+    });
+  }
+
+  async findById(uuid: string): Promise<ConnectResponseDTO> {
+    const connect = await this.db.connect.findUnique({
+      where: {id: uuid}
+    });
+ 
+    if (!connect){
+      throw new Error("O Connect não encontrado")
+    }
+
+    return connect;
+  }
 }
