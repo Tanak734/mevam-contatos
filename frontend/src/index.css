@@ -1,0 +1,130 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * DESIGN TOKENS
+ * Altere as cores do app inteiro aqui. Formato: "H S% L%" (HSL sem vírgulas).
+ * brand   = terracota das ações principais
+ * warm    = laranja queimado para prioridades
+ * danger  = vermelho fechado para críticos
+ */
+@layer base {
+  :root {
+    --background: 28 18% 95%;
+    --surface: 30 20% 99%;
+    --surface-2: 27 17% 92%;
+    --foreground: 20 21% 15%;
+    --muted: 20 11% 36%;
+    --subtle: 20 9% 47%;
+    --border: 27 14% 83%;
+    --border-strong: 23 15% 67%;
+
+    --brand: 17 72% 38%;
+    --brand-foreground: 0 0% 100%;
+    --warm: 24 82% 37%;
+    --info: 184 48% 29%;
+    --warning: 37 70% 35%;
+    --danger: 1 66% 37%;
+  }
+
+  .dark {
+    --background: 20 13% 7%;
+    --surface: 20 12% 10%;
+    --surface-2: 20 11% 15%;
+    --foreground: 30 22% 94%;
+    --muted: 28 12% 72%;
+    --subtle: 25 10% 57%;
+    --border: 23 11% 22%;
+    --border-strong: 24 12% 33%;
+
+    --brand: 18 76% 54%;
+    --brand-foreground: 0 0% 100%;
+    --warm: 26 82% 58%;
+    --info: 177 48% 56%;
+    --warning: 38 71% 58%;
+    --danger: 2 70% 62%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+
+  ::selection {
+    @apply bg-brand/25;
+  }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--brand));
+    outline-offset: 3px;
+  }
+
+  select {
+    color-scheme: light;
+  }
+
+  select option {
+    background-color: #181411;
+    color: #f7f2ec;
+  }
+
+  .dark select {
+    color-scheme: dark;
+  }
+}
+
+@layer utilities {
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .page-enter {
+    animation: page-enter 280ms ease-out both;
+  }
+}
+
+@keyframes page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Monitores ultra-wide: amplia controles e textos base sem alterar o mobile. */
+@media (min-width: 2200px) {
+  html { font-size: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Inputs de data/hora seguem o tema */
+.dark input[type='date']::-webkit-calendar-picker-indicator,
+.dark input[type='time']::-webkit-calendar-picker-indicator {
+  filter: invert(0.8);
+}
