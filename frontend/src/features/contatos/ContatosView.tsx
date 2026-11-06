@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import {
   AlertCircle, ArrowUpDown, BookHeart, Cake, ChevronRight,
-  Clock3, Edit3, House, MessageCircle, Plus, Search, UsersRound,
+  Clock3, Edit3, House, Lightbulb, MessageCircle, Plus, Search, UsersRound,
 } from 'lucide-react';
 import { useApp } from '@/store/appStore';
 import { Button } from '@/components/ui/Button';
@@ -85,33 +85,34 @@ export const ContatosView: React.FC = () => {
     const outros = getOutrosAcompanhantes(v);
     const pendencias = faltantes(v);
 
-    return <div className="space-y-5 mt-5">
-      <section className="rounded-xl border border-border bg-surface-2/60 p-4 sm:p-5 min-w-0"><h3 className="text-lg font-bold">Dados da pessoa</h3><dl className="mt-5 grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-x-6 gap-y-5 text-base"><div><dt className="text-sm text-subtle">Telefone</dt><dd className="mt-1 font-semibold break-words">{mascaraTelefone(v.telefone)}</dd></div><div><dt className="text-sm text-subtle">Membresia</dt><dd className="mt-1 font-semibold break-words">{STATUS_MEMBRO[v.statusMembro]}</dd></div><div><dt className="text-sm text-subtle">Momento</dt><dd className="mt-1 font-semibold break-words">{v.statusPessoa ? STATUS_PESSOA[v.statusPessoa] : 'Não informado'}</dd></div><div><dt className="text-sm text-subtle">Conheceu por</dt><dd className="mt-1 font-semibold break-words">{COMO_CONHECEU[v.comoConheceu]}</dd></div><div className={cn(!v.dataNascimento && 'rounded-lg border border-warning/60 bg-warning/10 p-3')}><dt className="text-sm text-subtle">Nascimento</dt><dd className="mt-1 font-semibold break-words">{v.dataNascimento ? formatarData(v.dataNascimento) : 'Não informado'}</dd></div><div><dt className="text-sm text-subtle">Estado civil</dt><dd className="mt-1 font-semibold break-words">{ESTADO_CIVIL[v.estadoCivil]}</dd></div><div className={cn('col-span-full', !v.bairro && 'rounded-lg border border-warning/60 bg-warning/10 p-3')}><dt className="text-sm text-subtle">Onde mora</dt><dd className="mt-1 font-semibold break-words">{[v.bairro, v.cidadeMora].filter(Boolean).join(', ') || 'Não informado'}</dd></div></dl></section>
-      <section className="rounded-xl border border-border bg-surface-2/40 p-4 sm:p-5">
-        <h3 className="text-base font-bold mb-4">Situação e vínculos</h3>
+    return <div className="space-y-4 mt-4">
+      <section className="rounded-xl border border-border bg-surface-2/60 p-4 min-w-0"><h3 className="text-lg font-bold">Dados da pessoa</h3><dl className="mt-3 grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-x-5 gap-y-3 text-base"><div><dt className="text-sm text-subtle">Telefone</dt><dd className="mt-1 font-semibold break-words">{mascaraTelefone(v.telefone)}</dd></div><div><dt className="text-sm text-subtle">Membresia</dt><dd className="mt-1 font-semibold break-words">{STATUS_MEMBRO[v.statusMembro]}</dd></div><div><dt className="text-sm text-subtle">Momento</dt><dd className="mt-1 font-semibold break-words">{v.statusPessoa ? STATUS_PESSOA[v.statusPessoa] : 'Não informado'}</dd></div><div><dt className="text-sm text-subtle">Conheceu por</dt><dd className="mt-1 font-semibold break-words">{COMO_CONHECEU[v.comoConheceu]}</dd></div><div className={cn(!v.dataNascimento && 'rounded-lg border border-warning/60 bg-warning/10 p-3')}><dt className="text-sm text-subtle">Nascimento</dt><dd className="mt-1 font-semibold break-words">{v.dataNascimento ? formatarData(v.dataNascimento) : 'Não informado'}</dd></div><div><dt className="text-sm text-subtle">Estado civil</dt><dd className="mt-1 font-semibold break-words">{ESTADO_CIVIL[v.estadoCivil]}</dd></div><div className={cn('sm:col-span-2', !v.bairro && 'rounded-lg border border-warning/60 bg-warning/10 p-3')}><dt className="text-sm text-subtle">Onde mora</dt><dd className="mt-1 font-semibold break-words">{[v.bairro, v.cidadeMora].filter(Boolean).join(', ') || 'Não informado'}</dd></div></dl></section>
+      <section className="rounded-xl border border-border bg-surface-2/40 p-4">
+        <h3 className="text-base font-bold mb-3">Situação e vínculos</h3>
         <div className="grid sm:grid-cols-2 2xl:grid-cols-3 gap-3 text-base">
-          <div className={cn('rounded-lg border p-4 min-w-0', !v.connectId ? 'border-danger/70 bg-danger/15 ring-1 ring-danger/20' : 'border-border bg-surface')}><span className="text-sm font-bold text-subtle"><House size={14} className="inline mr-1 text-info" /> Connect</span><p className="mt-1 font-semibold">{v.connectId ? getConnect(v.connectId)?.nome || 'Connect não encontrado' : <span className="flex items-center gap-2 font-bold text-danger"><AlertCircle size={18} />Sem Connect</span>}</p></div>
-          <div className={cn('rounded-lg border p-4 min-w-0', !v.discipuladorId ? 'border-warning/70 bg-warning/15 ring-1 ring-warning/20' : 'border-border bg-surface')}><span className="text-sm font-bold text-subtle"><BookHeart size={14} className="inline mr-1 text-brand" /> Discipulado</span><p className="mt-1 font-semibold">{v.discipuladorId ? getUsuario(v.discipuladorId)?.nome || 'Pessoa não encontrada' : <span className="flex items-center gap-2 font-bold text-warning"><AlertCircle size={18} />Sem discipulador</span>}</p></div>
-          <div className="rounded-lg border border-border bg-surface p-4 min-w-0"><span className="text-sm font-bold text-subtle"><UsersRound size={14} className="inline mr-1 text-warning" /> Acompanhamento</span><p className="mt-1 font-semibold">{outros.length} {outros.length === 1 ? 'outra pessoa' : 'outras pessoas'}</p></div>
+          <div className={cn('rounded-lg border p-3 min-w-0', !v.connectId ? 'border-danger/70 bg-danger/15 ring-1 ring-danger/20' : 'border-border bg-surface')}><span className="text-sm font-bold text-subtle"><House size={14} className="inline mr-1 text-info" /> Connect</span><p className="mt-1 font-semibold">{v.connectId ? getConnect(v.connectId)?.nome || 'Connect não encontrado' : <span className="flex items-center gap-2 font-bold text-danger"><AlertCircle size={18} />Sem Connect</span>}</p></div>
+          <div className={cn('rounded-lg border p-3 min-w-0', !v.discipuladorId ? 'border-warning/70 bg-warning/15 ring-1 ring-warning/20' : 'border-border bg-surface')}><span className="text-sm font-bold text-subtle"><BookHeart size={14} className="inline mr-1 text-brand" /> Discipulado</span><p className="mt-1 font-semibold">{v.discipuladorId ? getUsuario(v.discipuladorId)?.nome || 'Pessoa não encontrada' : <span className="flex items-center gap-2 font-bold text-warning"><AlertCircle size={18} />Sem discipulador</span>}</p></div>
+          <div className="rounded-lg border border-border bg-surface p-3 min-w-0"><span className="text-sm font-bold text-subtle"><UsersRound size={14} className="inline mr-1 text-warning" /> Acompanhamento</span><p className="mt-1 font-semibold">{outros.length} {outros.length === 1 ? 'outra pessoa' : 'outras pessoas'}</p></div>
         </div>
-        {pendencias.length > 0 && <div className="mt-4 rounded-xl border border-warning/60 bg-warning/10 p-4" aria-label="Informações faltantes">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-2"><AlertCircle size={21} className="text-warning shrink-0" /><h4 className="font-bold text-base">Cadastro incompleto · {pendencias.length} {pendencias.length === 1 ? 'informação pendente' : 'informações pendentes'}</h4></div>
-            <Button variant="outline" className="border-warning/60 text-warning hover:bg-warning/15" icon={<Edit3 size={17} />} onClick={() => setVisitanteParaEditar(v)}>Completar dados</Button>
+        {pendencias.length > 0 && <div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-warning/60 bg-warning/10 p-3" aria-label="Informações faltantes">
+          <div className="flex flex-wrap items-center gap-2">
+            <AlertCircle size={20} className="text-warning shrink-0" />
+            <h4 className="font-bold text-base mr-1">{pendencias.length} {pendencias.length === 1 ? 'informação pendente' : 'informações pendentes'}</h4>
+            {pendencias.map((item) => <span key={item} className="rounded-lg border border-warning/50 bg-surface px-2 py-1 text-sm font-semibold text-warning">{item}</span>)}
           </div>
-          <div className="mt-3 flex flex-wrap gap-2">{pendencias.map((item) => <span key={item} className="rounded-lg border border-warning/50 bg-surface px-3 py-1.5 text-sm font-semibold text-warning">{item}</span>)}</div>
+          <Button variant="outline" className="border-warning/60 text-warning hover:bg-warning/15" icon={<Edit3 size={17} />} onClick={() => setVisitanteParaEditar(v)}>Completar dados</Button>
         </div>}
       </section>
-      <div className="grid 2xl:grid-cols-2 gap-5 items-start">
-        <section className="rounded-xl border border-border bg-surface-2/40 p-4 sm:p-5"><h3 className="text-base font-bold">Sobre a pessoa</h3><p className="mt-3 text-base leading-relaxed text-muted">{v.observacaoPessoa || 'Ainda não há observações. Adicione detalhes que ajudem no próximo contato.'}</p></section>
-        <section className="rounded-xl border border-border bg-surface-2/40 p-4 sm:p-5"><div className="flex items-center justify-between gap-2"><h3 className="text-base font-bold">Histórico de contato</h3><span className="text-sm text-subtle">{v.historico.length} registro{v.historico.length !== 1 ? 's' : ''}</span></div>{v.historico.length === 0 ? <p className="mt-3 text-base text-muted">Nenhuma conversa registrada ainda.</p> : <div className="mt-4 space-y-4">{v.historico.map((h) => <div key={h.id} className="border-l-2 border-brand/40 pl-3"><div className="flex flex-wrap justify-between gap-2 text-sm"><strong>{getUsuario(h.autorId)?.nome || 'Líder'}</strong><span className="text-subtle">{formatarData(h.dataContato)}</span></div>{h.observacaoContato && <p className="text-base text-muted leading-relaxed mt-2">{h.observacaoContato}</p>}</div>)}</div>}</section>
+      <div className="grid 2xl:grid-cols-2 gap-4 items-start">
+        <section className="rounded-xl border border-border bg-surface-2/40 p-4"><h3 className="text-base font-bold">Sobre a pessoa</h3><p className="mt-2 text-base leading-relaxed text-muted">{v.observacaoPessoa || 'Ainda não há observações. Adicione detalhes que ajudem no próximo contato.'}</p></section>
+        <section className="rounded-xl border border-border bg-surface-2/40 p-4"><div className="flex items-center justify-between gap-2"><h3 className="text-base font-bold">Histórico de contato</h3><span className="text-sm text-subtle">{v.historico.length} registro{v.historico.length !== 1 ? 's' : ''}</span></div>{v.historico.length === 0 ? <p className="mt-3 text-base text-muted">Nenhuma conversa registrada ainda.</p> : <div className="mt-3 space-y-3">{v.historico.map((h) => <div key={h.id} className="border-l-2 border-brand/40 pl-3"><div className="flex flex-wrap justify-between gap-2 text-sm"><strong>{getUsuario(h.autorId)?.nome || 'Líder'}</strong><span className="text-subtle">{formatarData(h.dataContato)}</span></div>{h.observacaoContato && <p className="text-base text-muted leading-relaxed mt-2">{h.observacaoContato}</p>}</div>)}</div>}</section>
       </div>
     </div>;
   };
 
-  return <div className="mx-auto max-w-[2400px] space-y-3 lg:space-y-0 lg:h-full lg:min-h-0 lg:flex lg:flex-col">
+  return <div className="mx-auto max-w-[2120px] space-y-3 lg:space-y-0 lg:h-full lg:min-h-0 lg:flex lg:flex-col">
     {aniversariantesHoje.length > 0 && <div className="rounded-xl border border-brand/45 bg-brand/10 px-4 py-3 flex items-center gap-3"><Cake size={20} className="text-brand shrink-0" /><strong className="text-base">Aniversário hoje: {aniversariantesHoje.map((v) => v.nome).join(', ')}</strong></div>}
-    <div className="grid lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(340px,400px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(420px,520px)_minmax(0,1fr)] gap-3 items-start lg:flex-1 lg:min-h-0 lg:items-stretch">
+    <div className="grid lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(340px,400px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(400px,480px)_minmax(0,1fr)] gap-3 items-start lg:flex-1 lg:min-h-0 lg:items-stretch">
       <aside ref={listaRef} className="min-w-0 scroll-mt-32 rounded-2xl border border-border bg-surface lg:h-full lg:min-h-0 flex flex-col overflow-hidden" aria-label="Lista de contatos">
         <div className="p-3 border-b border-border space-y-2 shrink-0">
           <label className="relative block"><Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-subtle" /><input type="search" aria-label="Buscar contatos" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar nome, referência ou telefone" className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-3 text-sm text-foreground focus:outline-none focus:border-brand" /></label>
@@ -128,7 +129,7 @@ export const ContatosView: React.FC = () => {
           </button>;
         })}</div>
       </aside>
-      <div ref={fichaRef} aria-label="Ficha do visitante" className="min-w-0 scroll-mt-32 lg:max-h-full lg:min-h-0 lg:self-start lg:overflow-y-auto lg:no-scrollbar overscroll-contain rounded-2xl border border-border bg-surface p-4 sm:p-5 2xl:p-6">{selecionado ? <div className="mx-auto max-w-[1100px]">
+      <div ref={fichaRef} aria-label="Ficha do visitante" className="min-w-0 scroll-mt-32 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:no-scrollbar overscroll-contain rounded-2xl border border-border bg-surface p-4 sm:p-5">{selecionado ? <div className="w-full lg:min-h-full lg:flex lg:flex-col">
         <button className="lg:hidden mb-4 text-sm font-semibold text-brand" onClick={() => listaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>← Voltar à lista</button>
         <div className="grid 2xl:grid-cols-[minmax(0,1fr)_auto] gap-5 items-center">
           <div className="min-w-0">
@@ -145,12 +146,22 @@ export const ContatosView: React.FC = () => {
             <span className="mt-1 block text-base text-muted">{selecionado.ultimoContato ? formatarData(selecionado.ultimoContato) : `Cadastro: ${formatarData(selecionado.createdAt)}`}</span>
           </div>
         </div>
-        <div role="group" aria-label="Ações do visitante" className="mt-5 flex flex-wrap items-center gap-3">
+        <div role="group" aria-label="Ações do visitante" className="mt-4 flex flex-wrap items-center gap-3">
           <Button size="lg" variant="secondary" className="bg-emerald-800 border-emerald-700 text-white hover:bg-emerald-700" icon={<MessageCircle size={21} />} onClick={() => abrirWhatsApp(selecionado)}>WhatsApp</Button>
           <Button size="lg" variant="secondary" className="bg-yellow-600 border-yellow-500 text-yellow-950 hover:bg-yellow-500" icon={<Edit3 size={20} />} onClick={() => setVisitanteParaEditar(selecionado)}>Editar cadastro</Button>
           <Button size="lg" icon={<Plus size={19} />} onClick={() => setVisitanteParaContato(selecionado)}>Registrar contato</Button>
         </div>
         {detalhes(selecionado)}
+        <section aria-label="Sugestões para a próxima conversa" className="mt-4 lg:mt-auto pt-4">
+          <div className="border-t border-border pt-3">
+            <h4 className="flex items-center gap-2 text-base font-semibold"><Lightbulb size={18} className="text-warning shrink-0" />Para a próxima conversa</h4>
+            <div className="mt-3 grid 2xl:grid-cols-3 gap-3 text-sm leading-relaxed text-muted">
+              <p className="rounded-lg bg-surface-2/50 px-3 py-2">{selecionado.statusMembro === 'membro' ? 'Como você tem passado nesta semana?' : 'Como você tem passado desde a sua visita?'}</p>
+              <p className="rounded-lg bg-surface-2/50 px-3 py-2">{selecionado.connectId ? 'Como tem sido sua experiência no Connect?' : 'Gostaria de conhecer um Connect perto de você?'}</p>
+              <p className="rounded-lg bg-surface-2/50 px-3 py-2">{selecionado.discipuladorId ? 'Como está seu acompanhamento? Podemos ajudar em algo?' : 'Gostaria de ter alguém para acompanhar sua caminhada de fé?'}</p>
+            </div>
+          </div>
+        </section>
       </div> : <div className="p-8 text-center text-muted">Selecione uma pessoa na lista.</div>}</div>
     </div>
     <ModalRegistrarContato isOpen={Boolean(visitanteParaContato)} onClose={() => setVisitanteParaContato(null)} visitante={visitanteParaContato} />

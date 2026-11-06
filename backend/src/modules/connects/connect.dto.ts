@@ -1,6 +1,21 @@
 import { z } from 'zod';
+import {
+  createPaginatedResponseSchema,
+  MessageResponseSchema,
+  PaginationQuerySchema,
+} from '../../shared/schemas/common.schema.js';
 
 export const residenciaEnum = z.enum(['casa', 'apartamento', 'condominio']);
+
+export const diaSemanaEnum = z.enum([
+  'domingo',
+  'segunda',
+  'terca',
+  'quarta',
+  'quinta',
+  'sexta',
+  'sabado',
+]);
 
 export const CreateConnectSchema = z.object({
   nome: z
@@ -12,6 +27,19 @@ export const CreateConnectSchema = z.object({
     .string()
     .trim()
     .max(100, { message: 'O campo líderes deve ter no máximo 100 caracteres' })
+    .optional()
+    .nullable(),
+  supervisorId: z
+    .string()
+    .uuid({ message: 'ID do supervisor inválido' })
+    .optional()
+    .nullable(),
+  diaSemanaPadrao: diaSemanaEnum.optional().nullable(),
+  linkMaps: z
+    .string()
+    .trim()
+    .url({ message: 'Link do Maps inválido' })
+    .max(500)
     .optional()
     .nullable(),
   tipoResidencia: residenciaEnum.default('casa'),
@@ -36,11 +64,7 @@ export const CreateConnectSchema = z.object({
     .min(2, { message: 'Informe a cidade' })
     .max(100)
     .default('Campinas'),
-  complemento: z
-    .string()
-    .trim()
-    .optional()
-    .nullable(),
+  complemento: z.string().trim().optional().nullable(),
   cep: z
     .string()
     .trim()
@@ -57,7 +81,7 @@ export const CreateConnectSchema = z.object({
 
 export const UpdateConnectSchema = CreateConnectSchema.partial();
 
-export const ListConnectsQuerySchema = z.object({
+export const ListConnectsQuerySchema = PaginationQuerySchema.extend({
   nome: z.string().trim().optional(),
   bairro: z.string().trim().optional(),
   cidade: z.string().trim().optional(),
@@ -65,14 +89,15 @@ export const ListConnectsQuerySchema = z.object({
     .enum(['true', 'false'])
     .transform((val) => val === 'true')
     .optional(),
-  page: z.coerce.number().int().positive().default(1),
-  limit: z.coerce.number().int().positive().max(100).default(20),
 });
 
 export const ConnectResponseSchema = z.object({
-  id: z.uuid(),
+  id: z.string().uuid(),
   nome: z.string(),
   lideres: z.string().nullable(),
+  supervisorId: z.string().uuid().nullable().optional(),
+  diaSemanaPadrao: diaSemanaEnum.nullable().optional(),
+  linkMaps: z.string().nullable().optional(),
   tipoResidencia: residenciaEnum,
   rua: z.string(),
   numero: z.string(),
@@ -86,19 +111,8 @@ export const ConnectResponseSchema = z.object({
   updatedAt: z.date(),
 });
 
-export const ActionResponseSchema = z.object({
-  message: z.string(),
-});
-
-export const PaginatedConnectResponseSchema = z.object({
-  dados: z.array(ConnectResponseSchema),
-  meta: z.object({
-    total: z.number(),
-    page: z.number(),
-    limit: z.number(),
-    totalPaginas: z.number(),
-  }),
-});
+export const ActionResponseSchema = MessageResponseSchema;
+export const PaginatedConnectResponseSchema = createPaginatedResponseSchema(ConnectResponseSchema);
 
 export type CreateConnectDTO = z.infer<typeof CreateConnectSchema>;
 export type UpdateConnectDTO = z.infer<typeof UpdateConnectSchema>;

@@ -68,6 +68,8 @@ coverage/
 docker-data/
 postgres-data/
 data/
+!frontend/src/data/
+!frontend/src/data/**
 
 # ==========================================
 # Editores e Sistema Operacional
@@ -100,3 +102,6 @@ Sessionx.vim
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# outros
+/docs

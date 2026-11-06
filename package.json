@@ -4,23 +4,20 @@
   "private": true,
   "scripts": {
     "dev:backend": "pnpm --filter backend dev",
+    "dev:frontend": "pnpm --filter frontend dev",
+    "build:backend": "pnpm --filter backend build",
+    "build:frontend": "pnpm --filter frontend build",
     "db:push": "pnpm --filter backend run db:push",
     "db:migrate": "pnpm --filter backend run db:migrate",
     "db:generate": "pnpm --filter backend run db:generate",
     "db:studio": "pnpm --filter backend run db:studio"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@prisma/client",
-      "prisma",
-      "workerd",
-      "esbuild"
-    ]
-  },
   "devDependencies": {
-    "@fastify/type-provider-zod": "^1.0.1"
+    "@fastify/type-provider-zod": "^1.0.1",
+    "@types/bcryptjs": "^3.0.0"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "zod": "^4.6.7"
   }
 }
