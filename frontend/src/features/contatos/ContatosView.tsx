@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   AlertCircle, ArrowUpDown, BookHeart, Cake, ChevronRight,
   Clock3, Edit3, House, Lightbulb, MessageCircle, Plus, Search, UsersRound,
@@ -16,6 +16,7 @@ import { isExterno } from '@/config/permissions';
 import { cn } from '@/lib/utils';
 import { diasAteAniversario } from '@/lib/aniversario';
 import type { Visitante } from '@/types';
+import { useMediaQuery } from '@/lib/useMediaQuery';
 
 type Filtro = 'todos' | 'precisam' | 'sem_connect' | 'sem_discipulador' | 'nao_membros';
 type Ordenacao = 'prioridade' | 'recentes' | 'nome';
@@ -31,8 +32,8 @@ export const ContatosView: React.FC = () => {
   const [selecionadoId, setSelecionadoId] = useState<string | null>(null);
   const [visitanteParaContato, setVisitanteParaContato] = useState<Visitante | null>(null);
   const [visitanteParaEditar, setVisitanteParaEditar] = useState<Visitante | null>(null);
-  const listaRef = useRef<HTMLElement>(null);
-  const fichaRef = useRef<HTMLDivElement>(null);
+  const isMobile = useMediaQuery('(max-width: 1023px)');
+  const [expandidoId, setExpandidoId] = useState<string | null>(null);
 
   const listaBase = useMemo(
     () => visitantes.filter((v) => v.isAtivo && (!isExterno(currentUser.tipoUsuario) || v.userId === currentUser.id)),
@@ -110,59 +111,60 @@ export const ContatosView: React.FC = () => {
     </div>;
   };
 
+  const ficha = (v: Visitante, mobile = false) => <div className="w-full lg:min-h-full lg:flex lg:flex-col">
+        {!mobile && <div className="grid 2xl:grid-cols-[minmax(0,1fr)_auto] gap-5 items-center">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant={NIVEL_INFO[calcularTermometro(v).nivel].tone} dot size="md">{NIVEL_INFO[calcularTermometro(v).nivel].label}</Badge>
+              {v.dataNascimento && <span className="inline-flex items-center gap-2 text-sm font-semibold text-muted"><Cake size={16} className="text-brand" />{diasAteAniversario(v.dataNascimento) === 0 ? 'Aniversário hoje' : `Aniversário: ${formatarData(v.dataNascimento, 'dd/MM')}`}</span>}
+            </div>
+            <h3 className="mt-3 text-2xl 2xl:text-3xl font-bold">{v.nome}</h3>
+            <p className="mt-1 text-base text-muted">{v.apelidoReferencia || 'Sem referência cadastrada'}</p>
+          </div>
+          <div className={cn('rounded-xl border px-5 py-4 2xl:min-w-[240px]', calcularTermometro(v).nivel === 'critico' ? 'border-danger/45 bg-danger/10' : 'border-brand/30 bg-brand/5')}>
+            <span className="flex items-center gap-2 text-sm font-bold text-muted"><Clock3 size={17} className="text-brand" /> Último contato</span>
+            <strong className="mt-1 block text-2xl 2xl:text-3xl">{v.ultimoContato ? tempoRelativo(v.ultimoContato) : 'Ainda não houve'}</strong>
+            <span className="mt-1 block text-base text-muted">{v.ultimoContato ? formatarData(v.ultimoContato) : `Cadastro: ${formatarData(v.createdAt)}`}</span>
+          </div>
+        </div>}
+        <div role="group" aria-label="Ações do visitante" className={mobile ? "grid grid-cols-2 gap-2" : "mt-4 flex flex-wrap items-center gap-3"}>
+          <Button size={mobile ? "md" : "lg"} variant="secondary" className="bg-emerald-800 border-emerald-700 text-white hover:bg-emerald-700" icon={<MessageCircle size={21} />} onClick={() => abrirWhatsApp(v)}>WhatsApp</Button>
+          <Button size={mobile ? "md" : "lg"} variant="secondary" className="bg-yellow-600 border-yellow-500 text-yellow-950 hover:bg-yellow-500" icon={<Edit3 size={20} />} onClick={() => setVisitanteParaEditar(v)}>{mobile ? 'Editar' : 'Editar cadastro'}</Button>
+          <Button size="lg" className={mobile ? "col-span-2" : undefined} icon={<Plus size={19} />} onClick={() => setVisitanteParaContato(v)}>Registrar contato</Button>
+        </div>
+        {detalhes(v)}
+        <section aria-label="Sugestões para a próxima conversa" className="mt-4 lg:mt-auto pt-4">
+          <div className="border-t border-border pt-3">
+            <h4 className="flex items-center gap-2 text-base font-semibold"><Lightbulb size={18} className="text-warning shrink-0" />Para a próxima conversa</h4>
+            <div className="mt-3 grid 2xl:grid-cols-3 gap-3 text-sm leading-relaxed text-muted">
+              <p className="rounded-lg bg-surface-2/50 px-3 py-2">{v.statusMembro === 'membro' ? 'Como você tem passado nesta semana?' : 'Como você tem passado desde a sua visita?'}</p>
+              <p className="rounded-lg bg-surface-2/50 px-3 py-2">{v.connectId ? 'Como tem sido sua experiência no Connect?' : 'Gostaria de conhecer um Connect perto de você?'}</p>
+              <p className="rounded-lg bg-surface-2/50 px-3 py-2">{v.discipuladorId ? 'Como está seu acompanhamento? Podemos ajudar em algo?' : 'Gostaria de ter alguém para acompanhar sua caminhada de fé?'}</p>
+            </div>
+          </div>
+        </section>
+      </div>;
+
   return <div className="mx-auto max-w-[2120px] space-y-3 lg:space-y-0 lg:h-full lg:min-h-0 lg:flex lg:flex-col">
     {aniversariantesHoje.length > 0 && <div className="rounded-xl border border-brand/45 bg-brand/10 px-4 py-3 flex items-center gap-3"><Cake size={20} className="text-brand shrink-0" /><strong className="text-base">Aniversário hoje: {aniversariantesHoje.map((v) => v.nome).join(', ')}</strong></div>}
     <div className="grid lg:grid-cols-[minmax(300px,360px)_minmax(0,1fr)] xl:grid-cols-[minmax(340px,400px)_minmax(0,1fr)] 2xl:grid-cols-[minmax(400px,480px)_minmax(0,1fr)] gap-3 items-start lg:flex-1 lg:min-h-0 lg:items-stretch">
-      <aside ref={listaRef} className="min-w-0 scroll-mt-32 rounded-2xl border border-border bg-surface lg:h-full lg:min-h-0 flex flex-col overflow-hidden" aria-label="Lista de contatos">
+      <aside className="min-w-0 scroll-mt-32 rounded-2xl border border-border bg-surface lg:h-full lg:min-h-0 flex flex-col overflow-hidden" aria-label="Lista de contatos">
         <div className="p-3 border-b border-border space-y-2 shrink-0">
           <label className="relative block"><Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-subtle" /><input type="search" aria-label="Buscar contatos" value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar nome, referência ou telefone" className="h-10 w-full rounded-xl border border-border bg-surface-2 pl-10 pr-3 text-sm text-foreground focus:outline-none focus:border-brand" /></label>
           <div className="grid grid-cols-2 gap-2"><select aria-label="Filtrar contatos" value={filtro} onChange={(e) => setFiltro(e.target.value as Filtro)} className="min-w-0 h-9 rounded-lg border border-border bg-surface-2 px-2 text-sm text-foreground focus:outline-none focus:border-brand">{filtros.map((item) => <option key={item.id} value={item.id}>{item.label} ({item.count})</option>)}</select><label className="flex min-w-0 items-center gap-1 text-muted"><ArrowUpDown size={15} className="shrink-0" /><select aria-label="Ordenar contatos" value={ordenacao} onChange={(e) => setOrdenacao(e.target.value as Ordenacao)} className="min-w-0 w-full h-9 rounded-lg border border-border bg-surface-2 px-2 text-sm text-foreground focus:outline-none focus:border-brand"><option value="prioridade">Prioridade</option><option value="recentes">Contato recente</option><option value="nome">Nome A–Z</option></select></label></div>
           <p className="text-xs font-semibold text-muted">{listaFiltrada.length} {listaFiltrada.length === 1 ? 'pessoa encontrada' : 'pessoas encontradas'}</p>
         </div>
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain no-scrollbar">{listaFiltrada.length === 0 ? <p className="p-6 text-sm text-muted">Nenhum contato neste filtro.</p> : listaFiltrada.map((v) => {
-          const term = calcularTermometro(v); const info = NIVEL_INFO[term.nivel]; const active = selecionado?.id === v.id;
+        <div className="lg:min-h-0 lg:flex-1 lg:overflow-y-auto lg:overscroll-contain no-scrollbar">{listaFiltrada.length === 0 ? <p className="p-6 text-sm text-muted">Nenhum contato neste filtro.</p> : listaFiltrada.map((v) => {
+          const term = calcularTermometro(v); const info = NIVEL_INFO[term.nivel]; const active = isMobile ? expandidoId === v.id : selecionado?.id === v.id;
           const aniversarioHoje = Boolean(v.dataNascimento && diasAteAniversario(v.dataNascimento) === 0);
-          return <button key={v.id} onClick={() => { setSelecionadoId(v.id); if (window.innerWidth < 1024) requestAnimationFrame(() => fichaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })); }} aria-current={active ? 'true' : undefined} className={cn('block w-full border-b border-border border-l-[3px] px-4 py-3 text-left transition-colors hover:bg-surface-2', active ? 'border-l-brand bg-brand/10' : 'border-l-transparent')}>
-            <span className="flex items-start justify-between gap-2"><span className="min-w-0"><strong className="block truncate text-base font-bold">{v.nome}</strong><span className="block truncate text-sm text-muted">{v.apelidoReferencia || 'Sem referência'}</span></span><span className="flex shrink-0 items-center gap-2">{v.dataNascimento && <span className={cn('inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold', aniversarioHoje ? 'border-brand/50 bg-brand/15 text-brand' : 'border-border text-muted')}><Cake size={13} />{aniversarioHoje ? 'Hoje' : formatarData(v.dataNascimento, 'dd/MM')}</span>}<ChevronRight size={17} className="text-subtle" /></span></span>
+          return <div key={v.id}><button onClick={() => { setSelecionadoId(v.id); if (isMobile) setExpandidoId((atual) => atual === v.id ? null : v.id); }} aria-current={!isMobile && active ? 'true' : undefined} aria-expanded={isMobile ? active : undefined} aria-controls={isMobile && active ? `ficha-mobile-${v.id}` : undefined} className={cn('block w-full border-b border-border border-l-[3px] px-4 py-3 text-left transition-colors hover:bg-surface-2', active ? 'border-l-brand bg-brand/10' : 'border-l-transparent')}>
+            <span className="flex items-start justify-between gap-2"><span className="min-w-0"><strong className="block truncate text-base font-bold">{v.nome}</strong><span className="block truncate text-sm text-muted">{v.apelidoReferencia || 'Sem referência'}</span></span><span className="flex shrink-0 items-center gap-2">{v.dataNascimento && <span className={cn('inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-semibold', aniversarioHoje ? 'border-brand/50 bg-brand/15 text-brand' : 'border-border text-muted')}><Cake size={13} />{aniversarioHoje ? 'Hoje' : formatarData(v.dataNascimento, 'dd/MM')}</span>}<ChevronRight size={17} className={cn("text-subtle transition-transform", isMobile && active && "rotate-90")} /></span></span>
             <span className="mt-1.5 flex flex-wrap items-center gap-1.5"><Badge variant={info.tone} dot size="sm">{info.label}</Badge>{!v.connectId && <Badge variant="danger" size="sm" className="border-danger/70 bg-danger/20 font-semibold"><AlertCircle size={12} />Sem Connect</Badge>}{!v.discipuladorId && <Badge variant="warning" size="sm" className="border-warning/70 bg-warning/20 font-semibold"><AlertCircle size={12} />Sem discipulador</Badge>}</span>
             <span className="mt-2 flex items-end justify-between gap-2 text-sm"><span className="min-w-0"><span className="block text-xs text-subtle">Último contato</span><strong className="block text-foreground font-semibold">{v.ultimoContato ? formatarData(v.ultimoContato) : 'Ainda não houve'}</strong></span><span className="shrink-0 text-right"><span className="block text-xs font-medium text-muted">{v.acompanhantes.length} {v.acompanhantes.length === 1 ? 'pessoa acompanha' : 'pessoas acompanham'}</span><strong className="block text-base text-foreground whitespace-nowrap">{v.ultimoContato ? tempoRelativo(v.ultimoContato) : 'Novo'}</strong></span></span>
-          </button>;
+          </button>{isMobile && active && <div id={`ficha-mobile-${v.id}`} role="region" aria-label={`Ficha de ${v.nome}`} className="border-b border-border bg-background/50 px-3 py-4 animate-fade-in">{ficha(v, true)}</div>}</div>;
         })}</div>
       </aside>
-      <div ref={fichaRef} aria-label="Ficha do visitante" className="min-w-0 scroll-mt-32 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:no-scrollbar overscroll-contain rounded-2xl border border-border bg-surface p-4 sm:p-5">{selecionado ? <div className="w-full lg:min-h-full lg:flex lg:flex-col">
-        <button className="lg:hidden mb-4 text-sm font-semibold text-brand" onClick={() => listaRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>← Voltar à lista</button>
-        <div className="grid 2xl:grid-cols-[minmax(0,1fr)_auto] gap-5 items-center">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge variant={NIVEL_INFO[calcularTermometro(selecionado).nivel].tone} dot size="md">{NIVEL_INFO[calcularTermometro(selecionado).nivel].label}</Badge>
-              {selecionado.dataNascimento && <span className="inline-flex items-center gap-2 text-sm font-semibold text-muted"><Cake size={16} className="text-brand" />{diasAteAniversario(selecionado.dataNascimento) === 0 ? 'Aniversário hoje' : `Aniversário: ${formatarData(selecionado.dataNascimento, 'dd/MM')}`}</span>}
-            </div>
-            <h3 className="mt-3 text-2xl 2xl:text-3xl font-bold">{selecionado.nome}</h3>
-            <p className="mt-1 text-base text-muted">{selecionado.apelidoReferencia || 'Sem referência cadastrada'}</p>
-          </div>
-          <div className={cn('rounded-xl border px-5 py-4 2xl:min-w-[240px]', calcularTermometro(selecionado).nivel === 'critico' ? 'border-danger/45 bg-danger/10' : 'border-brand/30 bg-brand/5')}>
-            <span className="flex items-center gap-2 text-sm font-bold text-muted"><Clock3 size={17} className="text-brand" /> Último contato</span>
-            <strong className="mt-1 block text-2xl 2xl:text-3xl">{selecionado.ultimoContato ? tempoRelativo(selecionado.ultimoContato) : 'Ainda não houve'}</strong>
-            <span className="mt-1 block text-base text-muted">{selecionado.ultimoContato ? formatarData(selecionado.ultimoContato) : `Cadastro: ${formatarData(selecionado.createdAt)}`}</span>
-          </div>
-        </div>
-        <div role="group" aria-label="Ações do visitante" className="mt-4 flex flex-wrap items-center gap-3">
-          <Button size="lg" variant="secondary" className="bg-emerald-800 border-emerald-700 text-white hover:bg-emerald-700" icon={<MessageCircle size={21} />} onClick={() => abrirWhatsApp(selecionado)}>WhatsApp</Button>
-          <Button size="lg" variant="secondary" className="bg-yellow-600 border-yellow-500 text-yellow-950 hover:bg-yellow-500" icon={<Edit3 size={20} />} onClick={() => setVisitanteParaEditar(selecionado)}>Editar cadastro</Button>
-          <Button size="lg" icon={<Plus size={19} />} onClick={() => setVisitanteParaContato(selecionado)}>Registrar contato</Button>
-        </div>
-        {detalhes(selecionado)}
-        <section aria-label="Sugestões para a próxima conversa" className="mt-4 lg:mt-auto pt-4">
-          <div className="border-t border-border pt-3">
-            <h4 className="flex items-center gap-2 text-base font-semibold"><Lightbulb size={18} className="text-warning shrink-0" />Para a próxima conversa</h4>
-            <div className="mt-3 grid 2xl:grid-cols-3 gap-3 text-sm leading-relaxed text-muted">
-              <p className="rounded-lg bg-surface-2/50 px-3 py-2">{selecionado.statusMembro === 'membro' ? 'Como você tem passado nesta semana?' : 'Como você tem passado desde a sua visita?'}</p>
-              <p className="rounded-lg bg-surface-2/50 px-3 py-2">{selecionado.connectId ? 'Como tem sido sua experiência no Connect?' : 'Gostaria de conhecer um Connect perto de você?'}</p>
-              <p className="rounded-lg bg-surface-2/50 px-3 py-2">{selecionado.discipuladorId ? 'Como está seu acompanhamento? Podemos ajudar em algo?' : 'Gostaria de ter alguém para acompanhar sua caminhada de fé?'}</p>
-            </div>
-          </div>
-        </section>
-      </div> : <div className="p-8 text-center text-muted">Selecione uma pessoa na lista.</div>}</div>
+      {!isMobile && <div aria-label="Ficha do visitante" className="min-w-0 scroll-mt-32 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:no-scrollbar overscroll-contain rounded-2xl border border-border bg-surface p-4 sm:p-5">{selecionado ? ficha(selecionado) : <div className="p-8 text-center text-muted">Selecione uma pessoa na lista.</div>}</div>}
     </div>
     <ModalRegistrarContato isOpen={Boolean(visitanteParaContato)} onClose={() => setVisitanteParaContato(null)} visitante={visitanteParaContato} />
     <ModalNovoVisitante isOpen={Boolean(visitanteParaEditar)} onClose={() => setVisitanteParaEditar(null)} visitanteParaEditar={visitanteParaEditar} />
